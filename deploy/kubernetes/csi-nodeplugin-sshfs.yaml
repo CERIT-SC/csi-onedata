@@ -26,7 +26,8 @@ spec:
           args:
             - --v=5
             - --csi-address=/plugin/csi.sock
-            - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-sshfs/csi.sock
+#            - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-sshfs/csi.sock
+            - --kubelet-registration-path=/var/snap/microk8s/common/var/lib/kubelet/plugins/csi-sshfs/csi.sock
           env:
             - name: KUBE_NODE_NAME
               valueFrom:
@@ -43,7 +44,7 @@ spec:
             capabilities:
               add: ["SYS_ADMIN"]
             allowPrivilegeEscalation: true
-          image: chrfritz/csi-sshfs:latest
+          image: jhandl/csi-onedata:latest
           args:
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=$(CSI_ENDPOINT)"
@@ -59,18 +60,22 @@ spec:
             - name: plugin-dir
               mountPath: /plugin
             - name: pods-mount-dir
-              mountPath: /var/lib/kubelet/pods
+#              mountPath: /var/lib/kubelet/pods
+              mountPath: /var/snap/microk8s/common/var/lib/kubelet/pods
               mountPropagation: "Bidirectional"
       volumes:
         - name: plugin-dir
           hostPath:
-            path: /var/lib/kubelet/plugins/csi-sshfs
+#            path: /var/lib/kubelet/plugins/csi-sshfs
+            path: /var/snap/microk8s/common/var/lib/kubelet/plugins/csi-sshfs
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:
-            path: /var/lib/kubelet/pods
+#            path: /var/lib/kubelet/pods
+            path: /var/snap/microk8s/common/var/lib/kubelet/pods
             type: Directory
         - hostPath:
-            path: /var/lib/kubelet/plugins_registry
+#            path: /var/lib/kubelet/plugins_registry
+            path: /var/snap/microk8s/common/var/lib/kubelet/plugins_registry
             type: DirectoryOrCreate
           name: registration-dir
