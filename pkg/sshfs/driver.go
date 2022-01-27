@@ -17,7 +17,7 @@ type driver struct {
 }
 
 const (
-	driverName = "csi-sshfs"
+	driverName = "csi-onedata"
 )
 
 var (

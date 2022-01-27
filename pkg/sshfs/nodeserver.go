@@ -26,9 +26,10 @@ type nodeServer struct {
 }
 
 type mountPoint struct {
-	VolumeId     string
-	MountPath    string
-	IdentityFile string
+//	Host      string
+	VolumeId  string
+	MountPath string
+	Token     string
 }
 
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
@@ -57,17 +58,14 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return nil, e
 	}
 
-	server := req.GetVolumeContext()["server"]
-	port := req.GetVolumeContext()["port"]
-	if len(port) == 0 {
-		port = "22"
-	}
-
-	user := req.GetVolumeContext()["user"]
-	ep := req.GetVolumeContext()["share"]
-	privateKey := req.GetVolumeContext()["privateKey"]
+	/*
 	sshOpts := req.GetVolumeContext()["sshOpts"]
+	*/
 
+	host := req.GetVolumeContext()["host"]
+	token := req.GetVolumeContext()["token"]
+
+	/*
 	secret, e := getPublicKeySecret(privateKey)
 	if e != nil {
 		return nil, e
@@ -75,9 +73,9 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	privateKeyPath, e := writePrivateKey(secret)
 	if e != nil {
 		return nil, e
-	}
+	}*/
 
-	e = Mount(user, server, port, ep, targetPath, privateKeyPath, sshOpts)
+	e = Mount(host, targetPath, token)
 	if e != nil {
 		if os.IsPermission(e) {
 			return nil, status.Error(codes.PermissionDenied, e.Error())
@@ -87,7 +85,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		}
 		return nil, status.Error(codes.Internal, e.Error())
 	}
-	ns.mounts[req.VolumeId] = &mountPoint{IdentityFile: privateKeyPath, MountPath: targetPath, VolumeId: req.VolumeId}
+	ns.mounts[req.VolumeId] = &mountPoint{Token: token, MountPath: targetPath, VolumeId: req.VolumeId}
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
@@ -111,10 +109,12 @@ func (ns *nodeServer) NodeUnpublishVolume(ctx context.Context, req *csi.NodeUnpu
 		return nil, status.Error(codes.Internal, err.Error())
 	}
 	if point, ok := ns.mounts[req.VolumeId]; ok {
-		err := os.Remove(point.IdentityFile)
+		/*
+		err := os.Remove(point.Token)
 		if err != nil {
 			return nil, status.Error(codes.Internal, err.Error())
 		}
+		*/
 		delete(ns.mounts, point.VolumeId)
 		glog.Infof("successfully unmount volume: %s", point)
 	}
@@ -131,17 +131,11 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 }
 
 func validateVolumeContext(req *csi.NodePublishVolumeRequest) error {
-	if _, ok := req.GetVolumeContext()["server"]; !ok {
-		return status.Errorf(codes.InvalidArgument, "missing volume context value: server")
+	if _, ok := req.GetVolumeContext()["host"]; !ok {
+		return status.Errorf(codes.InvalidArgument, "missing volume context value: host")
 	}
-	if _, ok := req.GetVolumeContext()["user"]; !ok {
-		return status.Errorf(codes.InvalidArgument, "missing volume context value: user")
-	}
-	if _, ok := req.GetVolumeContext()["share"]; !ok {
-		return status.Errorf(codes.InvalidArgument, "missing volume context value: share")
-	}
-	if _, ok := req.GetVolumeContext()["privateKey"]; !ok {
-		return status.Errorf(codes.InvalidArgument, "missing volume context value: privateKey")
+	if _, ok := req.GetVolumeContext()["token"]; !ok {
+		return status.Errorf(codes.InvalidArgument, "missing volume context value: token")
 	}
 	return nil
 }
@@ -188,24 +182,24 @@ func writePrivateKey(secret *v1.Secret) (string, error) {
 	return f.Name(), nil
 }
 
-func Mount(user string, host string, port string, dir string, target string, privateKey string, sshOpts string) error {
-	mountCmd := "sshfs"
+// TODO sshOpts string
+func Mount(host string, target string, token string) error {
+	mountCmd := "mount"
 	mountArgs := []string{}
 
-	source := fmt.Sprintf("%s@%s:%s", user, host, dir)
 	mountArgs = append(
 		mountArgs,
-		source,
+		"-t", "onedata",
+		"-o", "allow_other",
+		"-o", "onedata_token="+token,
+		host,
 		target,
-		"-o", "port="+port,
-		"-o", "IdentityFile="+privateKey,
-		"-o", "StrictHostKeyChecking=accept-new",
-		"-o", "UserKnownHostsFile=/dev/null",
 	)
 
+	/*
 	if len(sshOpts) > 0 {
 		mountArgs = append(mountArgs, "-o", sshOpts)
-	}
+	}*/
 
 	// create target, os.Mkdirall is noop if it exists
 	err := os.MkdirAll(target, 0750)
