@@ -1,20 +1,20 @@
 # This YAML file contains driver-registrar & csi driver nodeplugin API objects
-# that are necessary to run CSI nodeplugin for sshfs
+# that are necessary to run CSI nodeplugin for onedata
 kind: DaemonSet
 apiVersion: apps/v1
 metadata:
-  name: csi-nodeplugin-sshfs
-  namespace: csi-sshfs
+  name: csi-nodeplugin-onedata
+  namespace: csi-onedata
 spec:
   selector:
     matchLabels:
-      app: csi-nodeplugin-sshfs
+      app: csi-nodeplugin-onedata
   template:
     metadata:
       labels:
-        app: csi-nodeplugin-sshfs
+        app: csi-nodeplugin-onedata
     spec:
-      serviceAccountName: csi-nodeplugin-sshfs
+      serviceAccountName: csi-nodeplugin-onedata
       hostNetwork: true
       containers:
         - name: node-driver-registrar
@@ -22,12 +22,12 @@ spec:
           lifecycle:
             preStop:
               exec:
-                command: ["/bin/sh", "-c", "rm -rf /registration/csi-sshfs /registration/csi-sshfs-reg.sock"]
+                command: ["/bin/sh", "-c", "rm -rf /registration/csi-onedata /registration/csi-onedata-reg.sock"]
           args:
             - --v=5
             - --csi-address=/plugin/csi.sock
-#            - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-sshfs/csi.sock
-            - --kubelet-registration-path=/var/snap/microk8s/common/var/lib/kubelet/plugins/csi-sshfs/csi.sock
+#            - --kubelet-registration-path=/var/lib/kubelet/plugins/csi-onedata/csi.sock
+            - --kubelet-registration-path=/var/snap/microk8s/common/var/lib/kubelet/plugins/csi-onedata/csi.sock
           env:
             - name: KUBE_NODE_NAME
               valueFrom:
@@ -38,7 +38,7 @@ spec:
               mountPath: /plugin
             - name: registration-dir
               mountPath: /registration
-        - name: sshfs
+        - name: onedata
           securityContext:
             privileged: true
             capabilities:
@@ -66,8 +66,8 @@ spec:
       volumes:
         - name: plugin-dir
           hostPath:
-#            path: /var/lib/kubelet/plugins/csi-sshfs
-            path: /var/snap/microk8s/common/var/lib/kubelet/plugins/csi-sshfs
+#            path: /var/lib/kubelet/plugins/csi-onedata
+            path: /var/snap/microk8s/common/var/lib/kubelet/plugins/csi-onedata
             type: DirectoryOrCreate
         - name: pods-mount-dir
           hostPath:

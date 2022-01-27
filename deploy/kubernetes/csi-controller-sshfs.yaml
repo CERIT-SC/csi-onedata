@@ -1,23 +1,23 @@
 # This YAML file contains attacher & csi driver API objects that are necessary
-# to run external CSI attacher for sshfs
+# to run external CSI attacher for onedata
 
 kind: StatefulSet
 apiVersion: apps/v1
 metadata:
-  name: csi-controller-sshfs
-  namespace: csi-sshfs
+  name: csi-controller-onedata
+  namespace: csi-onedata
 spec:
-  serviceName: "csi-controller-sshfs"
+  serviceName: "csi-controller-onedata"
   replicas: 1
   selector:
     matchLabels:
-      app: csi-controller-sshfs
+      app: csi-controller-onedata
   template:
     metadata:
       labels:
-        app: csi-controller-sshfs
+        app: csi-controller-onedata
     spec:
-      serviceAccountName: csi-controller-sshfs
+      serviceAccountName: csi-controller-onedata
       containers:
         - name: csi-attacher
           image: quay.io/k8scsi/csi-attacher:v1.0.1
@@ -43,7 +43,7 @@ spec:
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
-        - name: sshfs
+        - name: onedata
           image: jhandl/csi-onedata:latest
           args :
             - "--nodeid=$(NODE_ID)"

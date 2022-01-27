@@ -1,0 +1,66 @@
+#!/bin/bash
+
+
+# provider
+echo "$1"
+
+# mount point
+echo "$2"
+
+# -o
+echo "$3"
+
+# all options
+echo "$4"
+
+options_fuse=""
+# split the options that will be past to FUSE (except onedata_token)
+IFS=',' read -ra ADDR <<< "$4"
+for i in "${ADDR[@]}"; do
+	# find onedata_token
+	echo "$i"
+	
+	tmp_token="$(echo "$i" | grep -Eo '^onedata_token=[a-zA-Z0-9]+' | grep -Po '(?<=onedata_token=)[a-zA-Z0-9]+')"
+	tmp_uid="$(echo "$i" | grep -Eo '^uid=[0-9]+$')"
+	tmp_gid="$(echo "$i" | grep -Eo '^gid=[0-9]+$')"
+
+	echo "tmp $tmp"
+	if [ ! -z "$tmp_token" ]; then
+		token="$tmp_token"
+		echo "token!!!!"
+	elif [ ! -z "$tmp_uid" ]; then
+		uid="$tmp_uid"
+		echo "uid=$uid"
+	elif [ ! -z "$tmp_gid" ]; then
+		gid="$tmp_gid"
+		echo "gid=$gid"
+	else
+		if [ -z "$options_fuse" ]; then
+			options_fuse="$i"
+		else
+			options_fuse="$options_fuse,$i"
+		fi
+	fi
+done
+
+#token=$(echo "$4" | grep -Eo '(^|,)onedata_token=[a-zA-Z0-9]+(,|$)' | grep -Po '(?<=onedata_token=)[a-zA-Z0-9]+')
+
+echo "token $token"
+echo "options $options_fuse"
+
+if [ -z "$token" ]; then
+	echo "mount.onedata: Cannot parse token"
+	exit 1
+fi
+
+if [ -z "$uid" ]; then
+	uid="1000"
+fi
+
+if [ -z "$gid" ]; then
+	gid="1000"
+fi
+
+/usr/bin/oneclient -H "$1" -t "$token" -o "$options_fuse" "$2"
+#/oneclient-wrapper "$uid" "$gid" -H "$1" -t "$token" -o "$options_fuse" "$2"
+
