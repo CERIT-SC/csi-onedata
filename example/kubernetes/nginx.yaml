@@ -1,44 +1,41 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: data-sshfs
+  name: pv-onedata
   labels:
-    name: data-sshfs
+    name: pv-onedata
 spec:
   accessModes:
   - ReadWriteMany
   capacity:
     storage: 100Gi
-  storageClassName: sshfs
+  storageClassName: onedata
   csi:
-    driver: csi-sshfs
-    volumeHandle: data-id
+    driver: csi-onedata
+    volumeHandle: data-id-onedata
     volumeAttributes:
-      server: "10.135.151.63"
-      port: "22"
-      share: "/root/testvol"
-      privateKey: "default/testvol"
-      user: "root"
+      host: host
+      token: token
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-sshfs
+  name: pvc-onedata
 spec:
   accessModes:
   - ReadWriteMany
   resources:
     requests:
       storage: 100Gi
-  storageClassName: sshfs
+  storageClassName: onedata
   selector:
     matchLabels:
-      name: data-sshfs
+      name: pv-onedata
 ---
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx 
+  name: nginx
 spec:
   containers:
   - image: maersk/nginx
@@ -49,8 +46,8 @@ spec:
       protocol: TCP
     volumeMounts:
       - mountPath: /var/www
-        name: data-sshfs
+        name: v-onedata
   volumes:
-  - name: data-sshfs
+  - name: v-onedata
     persistentVolumeClaim:
-      claimName: data-sshfs
+      claimName: pvc-onedata
