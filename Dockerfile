@@ -114,8 +114,5 @@ RUN chmod +x /sbin/mount.onedata
 
 COPY --from=build-driver /csi-onedata /bin/csi-onedata
 
-ADD onedata/wrapper.sh /tmp/
-RUN chmod +x /tmp/wrapper.sh
-
 ENTRYPOINT ["/bin/csi-onedata"]
 CMD [""]
