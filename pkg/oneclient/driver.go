@@ -1,4 +1,4 @@
-package sshfs
+package oneclient
 
 import (
 	"github.com/container-storage-interface/spec/lib/go/csi"

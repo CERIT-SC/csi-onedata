@@ -2,4 +2,4 @@
 
 set -x
 
-/bin/csi-sshfs "$@"
+/bin/csi-oneclient "$@"

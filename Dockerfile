@@ -56,16 +56,16 @@ FROM ubuntu:20.04 AS build-driver
 RUN apt update && apt install -y --no-install-recommends git golang ca-certificates apt-utils
 
 ENV CGO_ENABLED=0, GO111MODULE=on
-WORKDIR /go/src/github.com/chr-fritz/csi-sshfs
+WORKDIR /go/src/csi-onedata
 
-ADD . /go/src/github.com/chr-fritz/csi-sshfs
+ADD . /go/src/csi-onedata
 
 RUN go mod download
 
 SHELL ["/bin/bash", "-c"]
 RUN export BUILD_TIME=`date -R` && \
-    export VERSION=`cat /go/src/github.com/chr-fritz/csi-sshfs/version.txt` && echo "time $BUILD_TIME version $VERSION" && \
-    go build -o /csi-sshfs -ldflags "-X 'github.com/chr-fritz/csi-sshfs/pkg/sshfs.BuildTime=${BUILD_TIME}' -X 'github.com/chr-fritz/csi-sshfs/pkg/sshfs.Version=${VERSION}'" github.com/chr-fritz/csi-sshfs/cmd/csi-sshfs
+    export VERSION=`cat /go/src/csi-onedata/version.txt` && echo "time $BUILD_TIME version $VERSION" && \
+    go build -o /csi-onedata -ldflags "-X 'csi-onedata/pkg/oneclient.BuildTime=${BUILD_TIME}' -X 'csi-onedata/pkg/oneclient.Version=${VERSION}'" csi-onedata/cmd/csi-onedata
 
 #========================================
 
@@ -107,12 +107,12 @@ RUN apt install -y --no-install-recommends \
 
 # Install oneclient with fsstat fix - builded in previous steps
 COPY --from=build-oneclient /build/oneclient /opt/oneclient
-RUN ln -s /opt/oneclient/oneclient /bin/oneclient
+RUN ln -s /opt/oneclient/release/oneclient /usr/bin/oneclient
 
 ADD onedata/mount.onedata /sbin/mount.onedata
 RUN chmod +x /sbin/mount.onedata
 
-COPY --from=build-driver /csi-sshfs /bin/csi-sshfs
+COPY --from=build-driver /csi-onedata /bin/csi-data
 
 ADD onedata/wrapper.sh /tmp/
 RUN chmod +x /tmp/wrapper.sh

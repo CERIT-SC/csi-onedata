@@ -3,7 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/chr-fritz/csi-sshfs/pkg/sshfs"
+	"csi-onedata/pkg/oneclient"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -23,8 +23,8 @@ func main() {
 	flag.CommandLine.Parse([]string{})
 
 	cmd := &cobra.Command{
-		Use:   "sshfs",
-		Short: "CSI based SSHFS driver",
+		Use:   "oneclient",
+		Short: "CSI based OneData driver",
 		Run: func(cmd *cobra.Command, args []string) {
 			handle()
 		},
@@ -40,12 +40,12 @@ func main() {
 
 	versionCmd := &cobra.Command{
 		Use:   "version",
-		Short: "Prints information about this version of csi sshfs plugin",
+		Short: "Prints information about this version of csi onedata plugin",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf(`CSI-SSHFS Plugin
+			fmt.Printf(`CSI-OneData Plugin
 Version:    %s
 Build Time: %s
-`, sshfs.Version, sshfs.BuildTime)
+`, oneclient.Version, oneclient.BuildTime)
 		},
 	}
 
@@ -62,6 +62,6 @@ Build Time: %s
 }
 
 func handle() {
-	d := sshfs.NewDriver(nodeID, endpoint)
+	d := oneclient.NewDriver(nodeID, endpoint)
 	d.Run()
 }

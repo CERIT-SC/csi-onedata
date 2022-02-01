@@ -1,4 +1,4 @@
-module github.com/chr-fritz/csi-sshfs
+module csi-onedata
 
 require (
 	github.com/container-storage-interface/spec v1.0.0

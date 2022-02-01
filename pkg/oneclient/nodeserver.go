@@ -1,4 +1,4 @@
-package sshfs
+package oneclient
 
 import (
 	"fmt"
