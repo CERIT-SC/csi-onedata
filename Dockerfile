@@ -112,10 +112,10 @@ RUN ln -s /opt/oneclient/release/oneclient /usr/bin/oneclient
 ADD onedata/mount.onedata /sbin/mount.onedata
 RUN chmod +x /sbin/mount.onedata
 
-COPY --from=build-driver /csi-onedata /bin/csi-data
+COPY --from=build-driver /csi-onedata /bin/csi-onedata
 
 ADD onedata/wrapper.sh /tmp/
 RUN chmod +x /tmp/wrapper.sh
 
-ENTRYPOINT ["/tmp/wrapper.sh"]
+ENTRYPOINT ["/bin/csi-onedata"]
 CMD [""]
