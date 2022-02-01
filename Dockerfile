@@ -1,15 +1,22 @@
 FROM ubuntu:18.04 AS build-oneclient
 
-RUN apt update && apt install -y --no-install-recommends python3 python3-setuptools python python-setuptools software-properties-common git dpkg-dev ca-certificates strace vim
+RUN apt update && apt install -y --no-install-recommends \
+    python3 \
+    python3-setuptools \
+    python \
+    python-setuptools \
+    software-properties-common \
+    git \
+    dpkg-dev \
+    ca-certificates
+
 RUN mkdir /build
 WORKDIR /build
 
 #RUN git clone -b release/20.02.15 https://github.com/onedata/oneclient.git
 RUN git clone -b csi-oneclient-edit https://github.com/josefhandl/oneclient.git
 #COPY oneclient oneclient
-#COPY oneclient/.travis.yml .travis.yml
 
-#RUN apt install -y software-properties-common
 RUN add-apt-repository -y ppa:onedata/build-deps-2002
 ENV DEBIAN_FRONTEND=noninteractive
 ENV TZ=Europe/Prague
@@ -45,12 +52,8 @@ RUN ls -la /build/oneclient/release
 
 #========================================
 
-#FROM golang:1.12-alpine3.9 AS  build-env
 FROM ubuntu:20.04 AS build-driver
-#RUN apk add --no-cache git
 RUN apt update && apt install -y --no-install-recommends git golang ca-certificates apt-utils
-#RUN apt update && apt install -y git golang
-#RUN apt search golang | grep installed
 
 ENV CGO_ENABLED=0, GO111MODULE=on
 WORKDIR /go/src/github.com/chr-fritz/csi-sshfs
@@ -66,12 +69,33 @@ RUN export BUILD_TIME=`date -R` && \
 
 #========================================
 
-#FROM alpine:3.9
-FROM ubuntu:20.04
+FROM ubuntu:18.04
 
-#RUN apk add --no-cache ca-certificates findmnt
-RUN apt update && apt install -y --no-install-recommends ca-certificates curl
+RUN apt update && apt install -y --no-install-recommends \
+    ca-certificates \
+    curl
 
+# Required by the oneclient
+RUN apt install -y --no-install-recommends \
+    libgoogle-glog0v5 \
+    fuse \
+    libboost-context1.65.1 \
+    libboost-filesystem1.65.1 \
+    libboost-iostreams1.65.1 \
+    libboost-log1.65.1 \
+    libboost-program-options1.65.1 \
+    libboost-python1.65.1 \
+    libboost-random1.65.1 \
+    libboost-system1.65.1 \
+    libboost-thread1.65.1 \
+    libevent-2.1-6 \
+    libdouble-conversion1 \
+    libtbb2 \
+    libprotobuf10 \
+    libradosstriper1 \
+    libpoconetssl50 \
+    glusterfs-common \
+    libsodium23
 
 # Install oneclient - recommended (ubuntu 20.04 is not supported)
 #RUN curl -sS  http://get.onedata.org/oneclient.sh | bash
@@ -82,7 +106,7 @@ RUN apt update && apt install -y --no-install-recommends ca-certificates curl
 #RUN bash /tmp/oneclient.sh
 
 # Install oneclient with fsstat fix - builded in previous steps
-COPY --from=build-oneclient /build/client/release /opt/oneclient
+COPY --from=build-oneclient /build/oneclient /opt/oneclient
 RUN ln -s /opt/oneclient/oneclient /bin/oneclient
 
 ADD onedata/mount.onedata /sbin/mount.onedata
@@ -95,5 +119,3 @@ RUN chmod +x /tmp/wrapper.sh
 
 ENTRYPOINT ["/tmp/wrapper.sh"]
 CMD [""]
-#ENTRYPOINT ["exit", "0"]
-#ENTRYPOINT ["sleep", "9999"]
