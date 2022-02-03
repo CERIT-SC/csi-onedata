@@ -50,9 +50,21 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return &csi.NodePublishVolumeResponse{}, nil
 	}
 
+	token := "token_init"
+	host := req.GetVolumeCapability().GetMount().GetFsType()
 	mountOptions := req.GetVolumeCapability().GetMount().GetMountFlags()
+	/*
+	if mountOptions == nil {
+		token = "JE TO NULL"
+	}
+	if len(mountOptions) == 0 {
+		token = "JE TO NULA"
+	}
+        if req.GetVolumeCapability().GetMount() == nil {
+		token = "NULL vsude"
+	}*/
 	if req.GetReadonly() {
-		mountOptions = append(mountOptions, "ro")
+		mountOptions = append(mountOptions, "ro", "NECO")
 	}
 	if e := validateVolumeContext(req); e != nil {
 		return nil, e
@@ -62,8 +74,8 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	sshOpts := req.GetVolumeContext()["sshOpts"]
 	*/
 
-	host := req.GetVolumeContext()["host"]
-	token := req.GetVolumeContext()["token"]
+//	host := req.GetVolumeContext()["host"]
+//	token := req.GetVolumeContext()["token"]
 
 	/*
 	secret, e := getPublicKeySecret(privateKey)
@@ -75,7 +87,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return nil, e
 	}*/
 
-	e = Mount(host, targetPath, token)
+	e = Mount(host, targetPath, token, mountOptions)
 	if e != nil {
 		if os.IsPermission(e) {
 			return nil, status.Error(codes.PermissionDenied, e.Error())
@@ -131,12 +143,14 @@ func (ns *nodeServer) NodeStageVolume(ctx context.Context, req *csi.NodeStageVol
 }
 
 func validateVolumeContext(req *csi.NodePublishVolumeRequest) error {
+	/*
 	if _, ok := req.GetVolumeContext()["host"]; !ok {
 		return status.Errorf(codes.InvalidArgument, "missing volume context value: host")
 	}
 	if _, ok := req.GetVolumeContext()["token"]; !ok {
 		return status.Errorf(codes.InvalidArgument, "missing volume context value: token")
 	}
+	*/
 	return nil
 }
 
@@ -183,7 +197,7 @@ func writePrivateKey(secret *v1.Secret) (string, error) {
 }
 
 // TODO sshOpts string
-func Mount(host string, target string, token string) error {
+func Mount(host string, target string, token string, mountOptions []string) error {
 	mountCmd := "mount"
 	mountArgs := []string{}
 
@@ -192,6 +206,24 @@ func Mount(host string, target string, token string) error {
 		"-t", "onedata",
 		"-o", "allow_other",
 		"-o", "onedata_token="+token,
+	)
+
+	if len(mountOptions) == 0 {
+		mountArgs = append(
+			mountArgs,
+			"!mountOptions je prazdny!",
+		)
+	}
+
+	for _, option := range mountOptions {
+		mountArgs = append(
+			mountArgs,
+			"--mo", option,
+		)
+	}
+
+	mountArgs = append(
+		mountArgs,
 		host,
 		target,
 	)
