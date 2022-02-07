@@ -61,6 +61,6 @@ if [ -z "$gid" ]; then
 	gid="1000"
 fi
 
-/usr/bin/oneclient -H "$1" -t "$token" -o "$options_fuse" "$2"
+/usr/bin/oneclient -H "$1" -t "$token" -o allow_other -o "$options_fuse" "$2"
 #/oneclient-wrapper "$uid" "$gid" -H "$1" -t "$token" -o "$options_fuse" "$2"
 

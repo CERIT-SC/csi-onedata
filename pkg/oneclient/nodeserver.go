@@ -50,9 +50,21 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return &csi.NodePublishVolumeResponse{}, nil
 	}
 
-	token := "token_init"
-	host := req.GetVolumeCapability().GetMount().GetFsType()
+	//host := "host_init"
+	//token := "token_init"
+	//host := req.GetVolumeCapability().GetMount().GetFsType()
 	mountOptions := req.GetVolumeCapability().GetMount().GetMountFlags()
+
+	tmp := req.GetSecrets()
+	/*
+	if tmp == nil {
+		token = "!secrets nil!"
+	}
+	*/
+
+	//token = fmt.Sprint(tmp)
+	token := strings.TrimSuffix(tmp["onedata_token"], "\n")
+	host := strings.TrimSuffix(tmp["host"], "\n")
 	/*
 	if mountOptions == nil {
 		token = "JE TO NULL"
@@ -204,23 +216,25 @@ func Mount(host string, target string, token string, mountOptions []string) erro
 	mountArgs = append(
 		mountArgs,
 		"-t", "onedata",
-		"-o", "allow_other",
 		"-o", "onedata_token="+token,
 	)
 
+	/*
 	if len(mountOptions) == 0 {
 		mountArgs = append(
 			mountArgs,
 			"!mountOptions je prazdny!",
 		)
-	}
+	}*/
 
+	/*
 	for _, option := range mountOptions {
 		mountArgs = append(
 			mountArgs,
 			"--mo", option,
 		)
 	}
+	*/
 
 	mountArgs = append(
 		mountArgs,
