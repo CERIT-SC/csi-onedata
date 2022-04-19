@@ -78,7 +78,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		token = "NULL vsude"
 	}*/
 	if req.GetReadonly() {
-		mountOptions = append(mountOptions, "ro", "NECO")
+		mountOptions = append(mountOptions, "ro")
 	}
 	if e := validateVolumeContext(req); e != nil {
 		return nil, e
