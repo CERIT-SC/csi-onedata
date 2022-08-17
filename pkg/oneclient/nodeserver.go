@@ -26,11 +26,12 @@ type nodeServer struct {
 }
 
 type mountPoint struct {
-//	Host      string
-	VolumeId  string
-	MountPath string
-	Token     string
-	SpaceId   string
+//	Host             string
+	VolumeId         string
+	MountPath        string
+	Token            string
+	SpaceId          string
+	OneclientOptions string
 }
 
 func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublishVolumeRequest) (*csi.NodePublishVolumeResponse, error) {
@@ -67,6 +68,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 	token := strings.TrimSuffix(tmp["onedata_token"], "\n")
 	host := strings.TrimSuffix(tmp["host"], "\n")
 	spaceId := strings.TrimSuffix(tmp["space_id"], "\n")
+	oneclientOptions := strings.TrimSuffix(tmp["oneclient_options"], "\n")
 	/*
 	if mountOptions == nil {
 		token = "JE TO NULL"
@@ -101,7 +103,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		return nil, e
 	}*/
 
-	e = Mount(host, targetPath, token, spaceId, mountOptions)
+	e = Mount(host, targetPath, token, spaceId, oneclientOptions, mountOptions)
 	if e != nil {
 		if os.IsPermission(e) {
 			return nil, status.Error(codes.PermissionDenied, e.Error())
@@ -111,7 +113,7 @@ func (ns *nodeServer) NodePublishVolume(ctx context.Context, req *csi.NodePublis
 		}
 		return nil, status.Error(codes.Internal, e.Error())
 	}
-	ns.mounts[req.VolumeId] = &mountPoint{Token: token, SpaceId: spaceId, MountPath: targetPath, VolumeId: req.VolumeId}
+	ns.mounts[req.VolumeId] = &mountPoint{Token: token, SpaceId: spaceId, OneclientOptions: oneclientOptions, MountPath: targetPath, VolumeId: req.VolumeId}
 	return &csi.NodePublishVolumeResponse{}, nil
 }
 
@@ -211,15 +213,16 @@ func writePrivateKey(secret *v1.Secret) (string, error) {
 }
 
 // TODO sshOpts string
-func Mount(host string, target string, token string, spaceId string, mountOptions []string) error {
+func Mount(host string, mountpointPath string, token string, spaceId string, oneclientOptions string, mountOptions []string) error {
 	mountCmd := "mount"
 	mountArgs := []string{}
 
 	mountArgs = append(
 		mountArgs,
 		"-t", "onedata",
-		"-o", "onedata_token="+token,
-		"-o", "space_id="+spaceId,
+		"-o", "onedata_token=" + token,
+		"-o", "space_id=" + spaceId,
+		"-o", "oneclient_options=\"" + oneclientOptions + "\"",
 	)
 
 	/*
@@ -242,7 +245,7 @@ func Mount(host string, target string, token string, spaceId string, mountOption
 	mountArgs = append(
 		mountArgs,
 		host,
-		target,
+		mountpointPath,
 	)
 
 	/*
@@ -251,7 +254,7 @@ func Mount(host string, target string, token string, spaceId string, mountOption
 	}*/
 
 	// create target, os.Mkdirall is noop if it exists
-	err := os.MkdirAll(target, 0750)
+	err := os.MkdirAll(mountpointPath, 0750)
 	if err != nil {
 		return err
 	}

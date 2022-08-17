@@ -21,12 +21,15 @@ for i in "${ADDR[@]}"; do
 	
 	tmp_token="$(echo "$i" | grep -Eo '^onedata_token=[a-zA-Z0-9]+' | grep -Po '(?<=onedata_token=)[a-zA-Z0-9]+')"
 	tmp_space_id="$(echo "$i" | grep -Eo '^space_id=[a-zA-Z0-9]+' | grep -Po '(?<=space_id=)[a-zA-Z0-9]+')"
+	tmp_options_oneclient="$(echo "$i" | grep -Eo '^oneclient_options=("[a-zA-Z0-9 -]*"|[a-zA-Z0-9 -]*)' | grep -Po '((?<=oneclient_options=")[a-zA-Z0-9 -]*|(?<=oneclient_options=)[a-zA-Z0-9 -]*)')"
 
 	echo "tmp $tmp"
 	if [ ! -z "$tmp_token" ]; then
 		token="$tmp_token"
 	elif [ ! -z "$tmp_space_id" ]; then
 		space_id="$tmp_space_id"
+	elif [ ! -z "$tmp_options_oneclient" ]; then
+		options_oneclient="$tmp_options_oneclient"
 	else
 		if [ -z "$options_fuse" ]; then
 			options_fuse="$i"
@@ -38,7 +41,8 @@ done
 
 echo "token: \"$token\""
 echo "space-id: \"$space_id\""
-echo "options: \"$options_fuse\""
+echo "options-oneclient: \"$options_oneclient\""
+echo "options-fuse: \"$options_fuse\""
 
 if [ -z "$token" ]; then
 	echo "mount.onedata: Cannot parse token"
@@ -50,6 +54,6 @@ if [ -z "$space_id" ]; then
 	exit 1
 fi
 
-/usr/bin/oneclient --host "$1" --token "$token" --space-id "$space_id" -o allow_other -o "$options_fuse" "$2"
+/usr/bin/oneclient --host "$1" --token "$token" --space-id "$space_id" $options_oneclient -o allow_other -o "$options_fuse" "$2"
 #/oneclient-wrapper "$uid" "$gid" -H "$1" -t "$token" -o "$options_fuse" "$2"
 
