@@ -20,7 +20,7 @@ spec:
       serviceAccountName: csi-controller-onedata
       containers:
         - name: csi-attacher
-          image: quay.io/k8scsi/csi-attacher:v1.0.1
+          image: k8s.gcr.io/sig-storage/csi-attacher:v3.4.0
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -32,17 +32,20 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-cluster-driver-registrar
-          image: quay.io/k8scsi/csi-cluster-driver-registrar:v1.0.1
+          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.4.0
           args:
             - "--v=5"
-            - "--pod-info-mount-version=\"v1\""
             - "--csi-address=$(ADDRESS)"
+#            - "--kubelet-registration-path=/var/lib/kubelet/plugins/csi-onedata/csi.sock"
+            - "--kubelet-registration-path=/var/snap/microk8s/common/var/lib/kubelet/plugins/csi-onedata/csi.sock"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
           volumeMounts:
             - name: socket-dir
               mountPath: /csi
+            - name: registration-dir
+              mountPath: /registration
         - name: onedata
           image: jhandl/csi-onedata:latest
           args :
@@ -62,3 +65,8 @@ spec:
       volumes:
         - name: socket-dir
           emptyDir:
+        - name: registration-dir
+          hostPath:
+            path: /var/lib/kubelet/plugins_registry
+            type: Directory
+
