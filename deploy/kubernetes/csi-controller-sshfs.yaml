@@ -36,8 +36,8 @@ spec:
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
-#            - "--kubelet-registration-path=/var/lib/kubelet/plugins/csi-onedata/csi.sock"
-            - "--kubelet-registration-path=/var/snap/microk8s/common/var/lib/kubelet/plugins/csi-onedata/csi.sock"
+            - "--kubelet-registration-path=/var/lib/kubelet/plugins/csi-onedata/csi.sock"
+#            - "--kubelet-registration-path=/var/snap/microk8s/common/var/lib/kubelet/plugins/csi-onedata/csi.sock"
           env:
             - name: ADDRESS
               value: /csi/csi.sock
