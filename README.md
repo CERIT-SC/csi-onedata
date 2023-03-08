@@ -1,55 +1,69 @@
-# Container Storage Interface Driver for SSHFS
+# Container Storage Interface Driver for Onedata
 
-**Warning: This is only a proof of concept and is not actively maintained. It should not be used in production environments!**
+**Warning: This is only a proof of concept. It should not be used in production environments!**
 
-This repository contains the CSI driver for SSHFS. It allows to mount directories using a ssh connection.
+This repository contains the CSI driver for [Onedata](https://onedata.org/). It allows to mount directories using a oneclient connection.
 
 ## Usage
 
+### Deploy CSI-driver (for cluster administrator)
+
 Deploy the whole directory `deploy/kubernetes`.
 This installs the csi controller and node plugin and a appropriate storage class for the csi driver.
+
 ```bash
 kubectl apply -f deploy/kubernetes
 ```
 
-To use the csi driver create a persistent volume and persistent volume claim like the example one:
+### Create pod (for users)
+
+To use the csi driver create a secret, persistent volume and persistent volume claim like the example one:
+
 ```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: secret-onedata-example
+#  labels:
+#    cerit-onedata-secret: "yes" # this driver is designed for the CERIT-SC cloud infrastructure
+data:
+  host: <HOST_ONEPROVIDER-URL> # host in base64 form
+  onedata_token: <ONEDATA_TOKEN> # token in base64 form
+  space_id: <SPACE-ID> # space-id in base64 form
+  oneclient_options: LS1mb3JjZS1kaXJlY3QtaW8K # "--force-direct-io" - Recommended for better performance, base64
+type: Opaque
+
+---
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: data-sshfs
-  labels:
-    name: data-sshfs
+  name: pv-onedata-example
 spec:
   accessModes:
-  - ReadWriteMany
+    - ReadWriteMany
   capacity:
     storage: 100Gi
-  storageClassName: sshfs
+  storageClassName: "onedata"
   csi:
-    driver: csi-sshfs
-    volumeHandle: data-id
-    volumeAttributes:
-      server: "<HOSTNAME|IP>"
-      port: "22"
-      share: "<PATH_TO_SHARE>"
-      privateKey: "<NAMESPACE>/<SECRET_NAME>"
-      user: "<SSH_CONNECT_USERNAME>"
+    driver: csi-onedata
+    nodePublishSecretRef:
+      name: secret-onedata-example
+      namespace: <YOUR-NAMESPACE>
+    volumeHandle: pv-onedata-example
+
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: data-sshfs
+  name: pvc-onedata-example
 spec:
   accessModes:
   - ReadWriteMany
   resources:
     requests:
       storage: 100Gi
-  storageClassName: sshfs
-  selector:
-    matchLabels:
-      name: data-sshfs
+  storageClassName: onedata
+  volumeName: pv-onedata-example
 ```
 
 Then mount the volume into a pod:
@@ -57,10 +71,10 @@ Then mount the volume into a pod:
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx 
+  name: nginx
 spec:
   containers:
-  - image: maersk/nginx
+  - image: nginx
     imagePullPolicy: Always
     name: nginx
     ports:
@@ -68,9 +82,9 @@ spec:
       protocol: TCP
     volumeMounts:
       - mountPath: /var/www
-        name: data-sshfs
+        name: data-onedata
   volumes:
-  - name: data-sshfs
+  - name: data-onedata
     persistentVolumeClaim:
-      claimName: data-sshfs
+      claimName: pvc-onedata-example
 ```
