@@ -47,7 +47,8 @@ spec:
             - name: registration-dir
               mountPath: /registration
         - name: onedata
-          image: jhandl/csi-onedata:latest
+          #image: jhandl/csi-onedata:v20.02.19
+          image: jhandl/csi-onedata:v21.02.2
           args :
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=$(CSI_ENDPOINT)"
