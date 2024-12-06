@@ -1,9 +1,9 @@
 package main
 
 import (
+	"csi-onedata/pkg/oneclient"
 	"flag"
 	"fmt"
-	"csi-onedata/pkg/oneclient"
 	"os"
 
 	"github.com/spf13/cobra"
@@ -24,7 +24,7 @@ func main() {
 
 	cmd := &cobra.Command{
 		Use:   "oneclient",
-		Short: "CSI based OneData driver",
+		Short: "CSI based Onedata driver",
 		Run: func(cmd *cobra.Command, args []string) {
 			handle()
 		},
@@ -42,7 +42,7 @@ func main() {
 		Use:   "version",
 		Short: "Prints information about this version of csi onedata plugin",
 		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Printf(`CSI-OneData Plugin
+			fmt.Printf(`CSI-Onedata Plugin
 Version:    %s
 Build Time: %s
 `, oneclient.Version, oneclient.BuildTime)
