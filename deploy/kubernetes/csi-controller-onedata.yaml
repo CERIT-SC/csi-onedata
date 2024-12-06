@@ -20,7 +20,7 @@ spec:
       serviceAccountName: csi-controller-onedata
       containers:
         - name: csi-attacher
-          image: k8s.gcr.io/sig-storage/csi-attacher:v3.4.0
+          image: k8s.gcr.io/sig-storage/csi-attacher:v4.2.0
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -32,7 +32,7 @@ spec:
             - name: socket-dir
               mountPath: /csi
         - name: csi-cluster-driver-registrar
-          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.4.0
+          image: k8s.gcr.io/sig-storage/csi-node-driver-registrar:v2.6.3
           args:
             - "--v=5"
             - "--csi-address=$(ADDRESS)"
@@ -47,8 +47,7 @@ spec:
             - name: registration-dir
               mountPath: /registration
         - name: onedata
-          #image: jhandl/csi-onedata:v20.02.19
-          image: jhandl/csi-onedata:v21.02.2
+          image: hub.cerit.io/csi/csi-onedata:v21.02.3-patch-01
           args :
             - "--nodeid=$(NODE_ID)"
             - "--endpoint=$(CSI_ENDPOINT)"
