@@ -1,6 +1,11 @@
 
 FROM ubuntu:22.04 AS build-driver
-RUN apt update && apt install -y --no-install-recommends git golang ca-certificates apt-utils
+
+RUN apt update && apt install -y --no-install-recommends \
+        git \
+        golang \
+        ca-certificates \
+        apt-utils
 
 ENV CGO_ENABLED=0, GO111MODULE=on
 WORKDIR /go/src/csi-onedata
@@ -18,13 +23,23 @@ RUN export BUILD_TIME=`date -R` && \
 
 FROM ubuntu:22.04
 
+ENV url='http://packages.onedata.org'
+ENV package='oneclient=21.02.3-1~jammy'
+
 RUN apt update && apt install -y --no-install-recommends \
     ca-certificates \
     curl \
     gnupg
 
 # Install oneclient
-RUN curl -sS  http://get.onedata.org/oneclient.sh | bash
+#RUN curl -sS  http://get.onedata.org/oneclient.sh | bash
+
+# Install oneclient manually to select specific version
+RUN curl ${url}/onedata.gpg.key | apt-key add - \
+    && echo "deb [arch=amd64] ${url}/apt/ubuntu/2102 jammy main" > /etc/apt/sources.list.d/onedata.list \
+    && echo "deb-src [arch=amd64] ${url}/apt/ubuntu/2102 jammy main" >> /etc/apt/sources.list.d/onedata.list \
+    && apt-get update \
+    && apt-get install -y ${package}
 
 # Add mount wrapper
 ADD onedata/mount.onedata /sbin/mount.onedata
